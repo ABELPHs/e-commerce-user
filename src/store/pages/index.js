@@ -1,0 +1,5 @@
+export * from './MainPage.jsx'
+export * from './SearchPage.jsx'
+export * from './OrderCheckoutPage.jsx'
+export * from './LoginPage.jsx'
+export * from './RegisterPage.jsx'
