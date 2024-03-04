@@ -1,5 +1,5 @@
 
-const apiUrl = 'http://localhost:8080';
+const apiUrl = 'http://ecommerce.us-west-2.elasticbeanstalk.com';
 
 const getToken = () => {
     try {
@@ -19,10 +19,10 @@ class _Get {
         const params = data;
         const query = new URLSearchParams(params).toString();
         url = `${apiUrl}${url}?${query}`;
-        const storedAuthData = JSON.parse(localStorage.getItem('authData'));
+        let token = getToken();
         let response = await fetch(url, {
             headers: {
-                'Authorization': getToken()
+                'Authorization': token
             }
         });
         response = response.json();
@@ -63,12 +63,14 @@ class _Post {
         data = {}
     }) => {
         url = `${apiUrl}${url}`;
+        let token = getToken();
+        console.log(token);
         let response = await fetch(url,
             {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
-                  'Authorization': getToken()
+                  'Authorization': token
                 },
                 body: JSON.stringify(data)
             } 
