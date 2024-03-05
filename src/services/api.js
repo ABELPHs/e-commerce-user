@@ -64,7 +64,6 @@ class _Post {
     }) => {
         url = `${apiUrl}${url}`;
         let token = getToken();
-        console.log(token);
         let response = await fetch(url,
             {
                 method: 'POST',
@@ -110,12 +109,14 @@ class _Post {
     }
 
     order = ({
-        items
+        items,
+        address
     }) => {
         return this.call({
             url: '/user/order',
             data: {
-                items
+                items,
+                address
             }
         });
     }

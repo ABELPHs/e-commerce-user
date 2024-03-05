@@ -44,7 +44,7 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 }));
 
 const CustomAppBar = styled(AppBar)({
-  backgroundColor: '#092635', // Replace with your desired color
+  backgroundColor: '#092635', 
 });
 
 export const Navbar = ({ cartItems, onSearch }) => {
@@ -78,6 +78,7 @@ export const Navbar = ({ cartItems, onSearch }) => {
     navigate('/login');
   }
   const navigateToHome = () => {
+    onSearch('');
     navigate('/');
   }
   return (

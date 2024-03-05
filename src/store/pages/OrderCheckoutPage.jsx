@@ -1,41 +1,46 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, Button, Container, Paper, Grid, TextField, Card, CardMedia, CardContent } from '@mui/material';
+import { Box, Typography, Button, Container, Paper, Grid, TextField, Card, CardMedia, CardContent, IconButton } from '@mui/material';
 import { useAuth, useCart } from '../context';
 import { API } from '../../services/api';
 import { useNavigate } from 'react-router-dom';
+import AddIcon from '@mui/icons-material/Add';
+import RemoveIcon from '@mui/icons-material/Remove';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 export const OrderCheckoutPage = () => {
-  const { cart, voidCart } = useCart();
+  const { cart, voidCart, setCart } = useCart();
   const { authData } = useAuth();
-  const [products, useProducts] = useState([]);
-  useEffect(()=> {
+  const [products, setProducts] = useState([]);
+  const [address, setAddress] = useState('');
+  const navigate = useNavigate();
+
+  useEffect(() => {
     loadFunction();
   }, []);
-  const navigate = useNavigate();
+
   const loadFunction = async () => {
     let finalItems = [];
-    let items = await Promise.all(cart.map((item)=>API.get.productInfo({
+    let items = await Promise.all(cart.map((item) => API.get.productInfo({
       productId: item.product_id
     })));
-    for(let i=0; i<items.length; i++){
+    for (let i = 0; i < items.length; i++) {
       let info = items[i]['product_info'];
-      if(info['stock'] > 0){
+      if (info['stock'] > 0) {
         finalItems[i] = info;
         finalItems[i]['quantity'] = cart[i]['quantity'];
-        if(info['stock'] < finalItems[i]['quantity']){
+        finalItems[i]['product_id'] = cart[i]['product_id'];
+        finalItems[i]['product_info'] = cart[i]['product_info'];
+        if (info['stock'] < finalItems[i]['quantity']) {
           finalItems[i]['quantity'] = info['stock'];
         }
       }
     }
-    useProducts(finalItems);
-  }
-  const getTotalPrice = () => {
-    return products.reduce((total, item) => total + item.price * item.quantity, 0);
+    setCart(finalItems);
+    setProducts(finalItems)
   };
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    // Process the order submission here
+  const getTotalPrice = () => {
+    return products.reduce((total, item) => total + item.price * item.quantity, 0);
   };
 
   const calculateSubtotal = (price, quantity) => {
@@ -44,18 +49,42 @@ export const OrderCheckoutPage = () => {
 
   const goToLogin = () => {
     navigate('/login');
-  }
+  };
 
   const placeOrder = () => {
-
     API.post.order({
-      items: products
-    }).then(() => {
+      items: [...products],
+      address
+    }).then((response) => {
+      navigate('/');
       voidCart();
-      navigate('/login');
     });
+  };
 
-  }
+  const increaseQuantity = (index) => {
+    let newProducts = [...products];
+    if(newProducts[index].quantity < newProducts[index].stock) {
+      newProducts[index].quantity += 1;
+      setProducts(newProducts);
+      setCart(newProducts);
+    }
+  };
+
+  const decreaseQuantity = (index) => {
+    let newProducts = [...products];
+    if (newProducts[index].quantity > 1) {
+      newProducts[index].quantity -= 1;
+      setProducts(newProducts);
+      setCart(newProducts);
+    }
+  };
+
+  const handleRemoveItem = (index) => {
+    let newProducts = [...products];
+    newProducts.splice(index, 1);
+    setProducts(newProducts);
+    setCart(newProducts);
+  };
 
   return (
     <Container>
@@ -64,38 +93,45 @@ export const OrderCheckoutPage = () => {
         <Grid container spacing={2}>
           {products.map((item, index) => (
             <Grid item xs={12} key={index}>
-            <Card sx={{ display: 'flex', padding:'10px' }}>
-              <CardMedia
-                component="img"
-                sx={{ width: 151 }}
-                image={item.url}
-                alt={item.name}
-              />
-              <CardContent sx={{ flex: '1 0 auto' }}>
-                <Typography component="div" variant="h5">
-                  {item.name}
-                </Typography>
-                <Typography variant="subtitle1" color="text.secondary" component="div">
-                  Price: ${item.price}
-                </Typography>
-                <Typography variant="subtitle1" color="text.secondary" component="div">
-                  Quantity: {item.quantity}
-                </Typography>
-                <Typography variant="subtitle1" color="text.secondary" component="div">
-                  Subtotal: ${calculateSubtotal(item.price, item.quantity)}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
+              <Card sx={{ display: 'flex', padding: '10px' }}>
+                <CardMedia
+                  component="img"
+                  sx={{ width: 151 }}
+                  image={item.url}
+                  alt={item.name}
+                />
+                <CardContent sx={{ flex: '1 0 auto' }}>
+                  <Typography component="div" variant="h5">
+                    {item.name}
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <IconButton onClick={() => decreaseQuantity(index)}>
+                      <RemoveIcon />
+                    </IconButton>
+                    <Typography sx={{ mx: 2 }}>{item.quantity}</Typography>
+                    <IconButton onClick={() => increaseQuantity(index)}>
+                      <AddIcon />
+                    </IconButton>
+                    <IconButton onClick={() => handleRemoveItem(index)}>
+                      <DeleteIcon />
+                    </IconButton>
+                  </Box>
+                  <Typography variant="subtitle1" color="text.secondary" component="div">
+                    Subtotal: ${calculateSubtotal(item.price, item.quantity)}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
           ))}
           <Grid item xs={12}>
             <Typography variant="h6">Total: ${getTotalPrice()}</Typography>
           </Grid>
           <Grid item xs={12}>
-            <form onSubmit={handleSubmit}>
-              <TextField label="Address" fullWidth margin="normal" required />
+            <form>
+              <TextField label="Address" fullWidth margin="normal" required value={address}
+            onChange={(e) => setAddress(e.target.value)}/>
               <div hidden={authData == null || products.length < 1}>
-                <Button type="submit" variant="contained" color="primary" sx={{ mt: 2 }} onClick={placeOrder}>
+                <Button variant="contained" color="primary" sx={{ mt: 2 }} onClick={placeOrder}>
                   Place Order
                 </Button>
               </div>
@@ -110,4 +146,4 @@ export const OrderCheckoutPage = () => {
       </Paper>
     </Container>
   );
-}
+};

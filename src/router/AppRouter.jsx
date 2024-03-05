@@ -15,28 +15,5 @@ export const AppRouter = () => {
             <StoreRoutes storeSearch={search}/>
         </>
       )
-  /* const {logged} = useContext(AuthContext);
-  if(logged){
-    return (
-      <>
-          <Routes>
-  
-              <Route path='/main' element={<HeroesRoutes/>}/>
-
-          </Routes>
-      </>
-    )
-  }
-  return (
-    <>
-        <Routes>
-            
-            <Route path='login' element={<LoginPage/>}/>
-
-            <Route path='/*' element={<Navigate to={'login'}/>}/>
-
-        </Routes>
-    </>
-  ) */
 }
 
